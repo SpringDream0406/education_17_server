@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePractice1Dto } from './dto/create-practice1.dto';
 import { UpdatePractice1Dto } from './dto/update-practice1.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,26 +13,42 @@ import { Repository } from 'typeorm';
 export class Practice1Service {
   constructor(
     @InjectRepository(Practice1)
-    protected practice1Repository: Repository<Practice1>,
+    private readonly practice1Repository: Repository<Practice1>,
   ) {}
+
   findAll() {
     return this.practice1Repository.find({
       order: { id: 'DESC' },
     });
   }
 
-  create(createPractice1Dto: CreatePractice1Dto) {
-    return this.practice1Repository.save(createPractice1Dto);
+  async create(createPractice1Dto: CreatePractice1Dto) {
+    await this.practice1Repository.insert(createPractice1Dto);
+    return this.findAll();
   }
 
-  update(id: number, updatePractice1Dto: UpdatePractice1Dto) {
-    return this.practice1Repository.update(id, updatePractice1Dto);
+  async update(id: number, updatePractice1Dto: UpdatePractice1Dto) {
+    const existingData = await this.practice1Repository.findOne({
+      where: { id },
+    });
+    if (!existingData) {
+      throw new NotFoundException(`Data with ID ${id} not found`);
+    }
+    await this.practice1Repository.update(id, updatePractice1Dto);
+    return this.findAll();
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     if (!id) {
       throw new BadRequestException('id is required');
     }
-    return this.practice1Repository.delete(id);
+    const existingData = await this.practice1Repository.findOne({
+      where: { id },
+    });
+    if (!existingData) {
+      throw new NotFoundException(`Data with ID ${id} not found`);
+    }
+    await this.practice1Repository.delete(id);
+    return this.findAll();
   }
 }

@@ -13,7 +13,7 @@ import { UpdatePractice1Dto } from './dto/update-practice1.dto';
 
 @Controller('practice1')
 export class Practice1Controller {
-  constructor(protected practiceService: Practice1Service) {}
+  constructor(private readonly practiceService: Practice1Service) {}
 
   @Get()
   findAll() {
